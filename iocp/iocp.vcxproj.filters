@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="root">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="root\Include">
+      <UniqueIdentifier>{4219bb45-1cc7-45a1-a930-e081ae603160}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="root\Src">
+      <UniqueIdentifier>{28bf0129-20f0-4dc6-999d-d08716011ed0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="root\Include\Server">
+      <UniqueIdentifier>{c52aaef5-ff6f-4da2-a6d6-2fe8e8f3f334}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="root\Include\Client">
+      <UniqueIdentifier>{0453d4d2-8184-489b-a361-b33654fc1cc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="root\Include\Common">
+      <UniqueIdentifier>{6d0a7a79-619a-4c2b-83b3-3c1bb0667ddf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="root\Include\Mgr">
+      <UniqueIdentifier>{3101355c-d8ae-4b59-b6b3-199524a0cc8b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TextServer.h">
+      <Filter>root\Include\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="IOCPServer.h">
+      <Filter>root\Include\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="Define.h">
+      <Filter>root\Include\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketManager.h">
+      <Filter>root\Include\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>root\Include\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="UserManager.h">
+      <Filter>root\Include\Mgr</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientInfo.h">
+      <Filter>root\Include\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="Ringbuffer.h">
+      <Filter>root\Include\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="SpinLock.h">
+      <Filter>root\Include\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="HuntingGround.h">
+      <Filter>root\Include\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="HuntingGroundManager.h">
+      <Filter>root\Include\Mgr</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>root</Filter>
+    </ClCompile>
+    <ClCompile Include="TextServer.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="IOCPServer.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketManager.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="User.h">
+      <Filter>root\Include\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="User.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorCode.h">
+      <Filter>root\Include\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="UserManager.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientInfo.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="HuntingGround.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="HuntingGroundManager.cpp">
+      <Filter>root\Src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

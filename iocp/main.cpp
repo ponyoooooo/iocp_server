@@ -12,7 +12,7 @@
 #define DBG_NEW new
 #endif
 
-#include "EchoServer.h"
+#include "TextServer.h"
 #include <string>
 
 const std::uint16_t SERVER_PORT = 8080;
@@ -21,9 +21,9 @@ const std::uint16_t MAX_CLIENT = 100; // 총 접속 가능 클라이언트 수
 int main()
 {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	_CrtSetBreakAlloc(1629);
+	//_CrtSetBreakAlloc(1629);
 
-	EchoServer server;
+	TextServer server;
 
 	// 소켓 초기화
 	server.InitSocket(MAX_WORKERTHREAD);
