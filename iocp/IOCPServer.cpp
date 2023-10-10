@@ -218,7 +218,7 @@ void IOCPServer::WorkerThread()
             if (bSuccess == false || (dwIoSize == 0 && pOverlappedEx->m_eOperation != IOOperation::ACCEPT))
             {
                 //std::cout << std::format("socket={} close", static_cast<int>(pClientInfo->m_socketClient)) << '\n';
-                pClientInfo->CloseSocket();
+                CloseSocket(pClientInfo, true);
                 continue;
             }
 

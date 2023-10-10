@@ -18,7 +18,7 @@ public:
 
     void Init(const int32_t m_groundNum, const int32_t m_maxUserCount);
     uint16_t EnterUser(User* user);
-    void LeaveUser(User* LeaveUser);
+    void LeaveUser(User* leaveUser);
 
     void NotifyChat(int32_t clientIndex, const char* userID, const char* msg);
     void NotifyEnterUser(User* user);
@@ -27,7 +27,7 @@ public:
     std::function<void(uint32_t, uint32_t, char*)> SendPacketFunc;
 
 private:
-    void SendToAllUser(const uint16_t dataSize, char* data, const int32_t passUserIndex, bool exceptMe);
+    void SendToAllUser(const uint16_t dataSize, char* data, const int32_t passUserIndex, bool exceptMe) const;
 
     int32_t m_groundNum = -1;
     std::list<User*> m_userList;

@@ -5,46 +5,66 @@
 
 class UserInfo {
 private:
-    uint16_t m_Level;
-    uint32_t m_Exp;
-    uint32_t m_MaxExp;
-    uint32_t m_HP;
-    uint32_t m_MaxHP;
-    uint32_t m_MP;
-    uint32_t m_MaxMP;
-    uint32_t m_Attack;
-    uint32_t m_Defense;
-    uint32_t m_Gold;
-    Item m_Inventory[MAX_INVENTORY_ITEMS];
+    uint16_t m_groundNum = 0;
 
 public:
-    UserInfo() : m_Level(0), m_Exp(0), m_MaxExp(0), m_HP(0), m_MaxHP(0), m_MP(0), m_MaxMP(0),
-        m_Attack(0), m_Defense(0), m_Gold(0) {}
+    [[nodiscard]] uint16_t GetGroundNum() const
+    {
+	    return m_groundNum;
+    }
+
+    void SetGroundNum(const uint16_t groundNum)
+    {
+	    m_groundNum = groundNum;
+    }
+
+private:
+    uint16_t m_level;
+    uint32_t m_exp;
+    uint32_t m_maxExp;
+    uint32_t m_hp;
+    uint32_t m_maxHp;
+    uint32_t m_mp;
+    uint32_t m_maxMp;
+    uint32_t m_attack;
+    uint32_t m_defense;
+    uint32_t m_gold;
+    Item m_inventory[MAX_INVENTORY_ITEMS];
+
+public:
+    UserInfo() : m_groundNum(0), m_level(0), m_exp(0), m_maxExp(0), m_hp(0), m_maxHp(0), m_mp(0), m_maxMp(0),
+        m_attack(0), m_defense(0), m_gold(0) {}
 
     void SetDataFromLoginPacket(const LOGIN_RESPONSE_PACKET* packet) {
-        m_Level = packet->Level;
-        m_Exp = packet->Exp;
-        m_MaxExp = packet->MaxExp;
-        m_HP = packet->HP;
-        m_MaxHP = packet->MaxHP;
-        m_MP = packet->MP;
-        m_MaxMP = packet->MaxMP;
-        m_Attack = packet->Attack;
-        m_Defense = packet->Defense;
-        m_Gold = packet->Gold;
+        m_level = packet->Level;
+        m_exp = packet->Exp;
+        m_maxExp = packet->MaxExp;
+        m_hp = packet->HP;
+        m_maxHp = packet->MaxHP;
+        m_mp = packet->MP;
+        m_maxMp = packet->MaxMP;
+        m_attack = packet->Attack;
+        m_defense = packet->Defense;
+        m_gold = packet->Gold;
 
         /*for (int i = 0; i < MAX_INVENTORY_ITEMS; ++i) {
-            m_Inventory[i] = packet.Inventory[i];
+            m_inventory[i] = packet.Inventory[i];
         }*/
     }
 
     void PrintCharacterInfo() {
+        if (0 == m_groundNum)
+        {
+            return;
+        }
+
         std::cout << "+---------------------------------------+" << std::endl;
-        std::cout << " Level: " << m_Level << " | Exp: " << m_Exp << "/" << m_MaxExp << '\n';
-        std::cout << " HP: " << m_HP << "/" << m_MaxHP << " | MP: " << m_MP << "/" << m_MaxMP;
+        std::cout << " »ç³ÉÅÍ: " << m_groundNum << '\n';
+        std::cout << " Level: " << m_level << " | Exp: " << m_exp << "/" << m_maxExp << '\n';
+        std::cout << " HP: " << m_hp << "/" << m_maxHp << " | MP: " << m_mp << "/" << m_maxMp;
         std::cout << '\n';
-        std::cout << " Attack: " << m_Attack << " | Defense: " << m_Defense << '\n';
-        std::cout << " Gold: " << m_Gold;
+        std::cout << " Attack: " << m_attack << " | Defense: " << m_defense << '\n';
+        std::cout << " Gold: " << m_gold;
         std::cout << '\n';
         std::cout << "+---------------------------------------+" << '\n';
     }

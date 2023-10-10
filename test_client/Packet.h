@@ -110,6 +110,7 @@ struct GROUND_ENTER_REQUEST_PACKET : public PACKET_HEADER
 struct GROUND_ENTER_RESPONSE_PACKET : public PACKET_HEADER
 {
 	int16_t Result;
+	int16_t GroundNum;
 };
 
 // 사냥터 나가기 요청 패킷 구조체
@@ -145,13 +146,13 @@ struct GROUND_CHAT_NOTIFY_PACKET : public PACKET_HEADER
 // 사냥터 유저 입장 알림 패킷 구조체
 struct GROUND_USER_ENTER_NOTIFY_PACKET : public PACKET_HEADER
 {
-	char UserId[50];
+	char UserId[MAX_USER_ID_LEN + 1] = { 0 , };
 };
 
 // 사냥터 유저 퇴장 알림 패킷 구조체
 struct GROUND_USER_LEAVE_NOTIFY_PACKET : public PACKET_HEADER
 {
-	char UserId[50];
+	char UserId[MAX_USER_ID_LEN + 1] = { 0 , };
 };
 
 #pragma pack(pop)

@@ -190,8 +190,13 @@ void PacketManager::ProcessLogin(const std::uint32_t clientIndex, const std::uin
 
 void PacketManager::ClearConnectionInfo(const std::uint32_t clientIndex)
 {
-    const auto pReqUser = m_userManager->GetUserByConnIdx(clientIndex);
-    if (pReqUser->GetDomainState() != User::DOMAIN_STATE::NONE)
+	const auto pReqUser = m_userManager->GetUserByConnIdx(clientIndex);
+    if (User::DOMAIN_STATE::HUNTINGGROUND == pReqUser->GetDomainState())
+    {
+        m_groundManager->LeaveUser(pReqUser->GetCurrentGround(), pReqUser);
+    }
+
+    if (User::DOMAIN_STATE::NONE != pReqUser->GetDomainState())
     {
         m_userManager->DeleteUserInfo(pReqUser);
     }
@@ -212,6 +217,7 @@ void PacketManager::ProcessEnterGround(const std::uint32_t clientIndex, std::uin
     GROUND_ENTER_RESPONSE_PACKET groundEnterResPacket;
     groundEnterResPacket.PacketId = PACKET_ID::GROUND_ENTER_RESPONSE;
     groundEnterResPacket.PacketLength = sizeof(GROUND_ENTER_RESPONSE_PACKET);
+    groundEnterResPacket.GroundNum = pGroundEnterReqPacket->GroundNumber;
     groundEnterResPacket.Result = m_groundManager->EnterUser(pGroundEnterReqPacket->GroundNumber, pReqUser);
 
     SendPacketFunc(clientIndex, sizeof(groundEnterResPacket), reinterpret_cast<char*>(&groundEnterResPacket));

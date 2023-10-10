@@ -50,7 +50,7 @@ int User::SetLogin(const std::string& userID)
 void User::EnterGround(int groundNum)
 {
 	m_groundIndex = groundNum;
-	m_curDomainState = DOMAIN_STATE::HuntingGround;
+	m_curDomainState = DOMAIN_STATE::HUNTINGGROUND;
 }
 
 // 도메인 상태 설정 함수

@@ -30,10 +30,12 @@ uint16_t HuntingGround::EnterUser(User* user) {
     return static_cast<uint16_t>(ERROR_CODE::NONE);
 }
 
-void HuntingGround::LeaveUser(User* LeaveUser) {
-    m_userList.remove_if([leaveUserId = LeaveUser->GetUserId()](User* user) {
+void HuntingGround::LeaveUser(User* leaveUser) {
+    m_userList.remove_if([leaveUserId = leaveUser->GetUserId()](User* user) {
         return leaveUserId == user->GetUserId();
         });
+
+    NotifyLeaveUser(leaveUser);
 }
 
 void HuntingGround::NotifyChat(int32_t clientIndex, const char* userID, const char* msg) {
@@ -66,7 +68,8 @@ void HuntingGround::NotifyLeaveUser(User* leaveUser)
     SendToAllUser(sizeof(gUserNotifyPacket), reinterpret_cast<char*>(&gUserNotifyPacket), leaveUser->GetNetConnIdx(), true);
 }
 
-void HuntingGround::SendToAllUser(const uint16_t dataSize, char* data, const int32_t passUserIndex, bool exceptMe) {
+void HuntingGround::SendToAllUser(const uint16_t dataSize, char* data, const int32_t passUserIndex, bool exceptMe) const
+{
     for (auto user : m_userList) {
         if (user == nullptr) {
             continue;

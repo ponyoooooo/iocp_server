@@ -1,8 +1,8 @@
 #include "HuntingGroundManager.h"
 
 HuntingGroundManager::~HuntingGroundManager() {
-    for (auto room : m_groundList) {
-        delete room;
+    for (const auto ground : m_groundList) {
+        delete ground;
     }
 }
 
@@ -24,8 +24,9 @@ uint32_t HuntingGroundManager::GetMaxGroundCount() const {
     return m_maxGroundCount;
 }
 
-uint16_t HuntingGroundManager::EnterUser(int32_t groundNumber, User* user) {
-    auto ground = GetGroundByNumber(groundNumber);
+uint16_t HuntingGroundManager::EnterUser(int32_t groundNumber, User* user) const
+{
+	const auto ground = GetGroundByNumber(groundNumber);
     if (!ground) {
         return static_cast<uint16_t>(ERROR_CODE::GROUND_INVALID_INDEX);
     }
@@ -41,20 +42,23 @@ uint16_t HuntingGroundManager::EnterUser(int32_t groundNumber, User* user) {
     return retCode;
 }
 
-int16_t HuntingGroundManager::LeaveUser(int32_t roomNumber, User* user) {
-    auto room = GetGroundByNumber(roomNumber);
-    if (!room) {
+int16_t HuntingGroundManager::LeaveUser(int32_t groundNumber, User* user) const
+{
+	const auto ground = GetGroundByNumber(groundNumber);
+    if (!ground) {
         return static_cast<int16_t>(ERROR_CODE::GROUND_INVALID_INDEX);
     }
     user->SetDomainState(User::DOMAIN_STATE::LOGIN);
-    room->LeaveUser(user);
+    ground->LeaveUser(user);
+
     return static_cast<int16_t>(ERROR_CODE::NONE);
 }
 
-HuntingGround* HuntingGroundManager::GetGroundByNumber(int32_t number) {
+HuntingGround* HuntingGroundManager::GetGroundByNumber(int32_t number) const
+{
     if (number < m_beginGroundNumber || number >= m_endGroundNumber) {
         return nullptr;
     }
-    auto index = number - m_beginGroundNumber;
+    const auto index = number - m_beginGroundNumber;
     return m_groundList[index];
 }

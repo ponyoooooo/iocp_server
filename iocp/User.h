@@ -13,7 +13,7 @@ public:
     {
         NONE = 0,
         LOGIN = 1,
-        HuntingGround = 2
+        HUNTINGGROUND = 2
     };
 
     User();
