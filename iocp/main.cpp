@@ -26,7 +26,7 @@ int main()
 	TextServer server;
 
 	// 소켓 초기화
-	server.InitSocket(MAX_WORKERTHREAD);
+	server.InitSocket();
 
 	// 소켓과 서버 주소를 연결 및 등록
 	server.BindandListen(SERVER_PORT);

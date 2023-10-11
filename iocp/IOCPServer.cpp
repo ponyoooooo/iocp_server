@@ -13,7 +13,7 @@ IOCPServer::~IOCPServer(void)
     WSACleanup();
 }
 
-bool IOCPServer::InitSocket(const std::uint32_t maxIOWorkerThreadCount)
+bool IOCPServer::InitSocket()
 {
     WSADATA wsaData;
     int nRet = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -30,7 +30,6 @@ bool IOCPServer::InitSocket(const std::uint32_t maxIOWorkerThreadCount)
         return false;
     }
 
-    m_maxIOWorkerThreadCount = maxIOWorkerThreadCount;
     std::cout << "socket init success" << '\n';
     return true;
 }
@@ -40,12 +39,9 @@ bool IOCPServer::BindandListen(const std::uint32_t uiBinPort)
     SOCKADDR_IN	stServerAddr;
     stServerAddr.sin_family = AF_INET;
     stServerAddr.sin_port = htons(uiBinPort); // server port
-    //어떤 주소에서 들어오는 접속이라도 받아들이겠다.
-    //보통 서버라면 이렇게 설정한다. 만약 한 아이피에서만 접속을 받고 싶다면
-    //그 주소를 inet_addr함수를 이용해 넣으면 된다.
+
     stServerAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    //위에서 지정한 서버 주소 정보와 cIOCompletionPort 소켓을 연결한다.
     int nRet = bind(m_listenSocket, reinterpret_cast<SOCKADDR*>(&stServerAddr), sizeof(SOCKADDR_IN));
     if (nRet != 0)
     {
@@ -53,8 +49,6 @@ bool IOCPServer::BindandListen(const std::uint32_t uiBinPort)
         return false;
     }
 
-    //접속 요청을 받아들이기 위해 cIOCompletionPort소켓을 등록하고 
-    //접속대기큐를 128개로 설정 한다.
     nRet = listen(m_listenSocket, 128);
     if (nRet != 0)
     {

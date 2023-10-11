@@ -16,7 +16,7 @@ public:
 	IOCPServer(void);
 	virtual ~IOCPServer(void);
 
-	bool InitSocket(const std::uint32_t maxIOWorkerThreadCount);
+	bool InitSocket();
 	bool BindandListen(const std::uint32_t uiBinPort);
 	bool StartServer(const std::uint32_t maxClientCount);
 	void DestryThread();

@@ -60,7 +60,7 @@ struct Item {
 // 로그인 응답 패킷 구조체
 struct LOGIN_RESPONSE_PACKET : public PACKET_HEADER
 {
-	uint16_t Result;     // 로그인 결과
+	uint16_t Result = -1;     // 로그인 결과
 
 	uint16_t Level = 1;      // 캐릭터 레벨
 	uint32_t Exp = 0;        // 경험치
