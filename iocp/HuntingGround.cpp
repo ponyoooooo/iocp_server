@@ -38,7 +38,8 @@ void HuntingGround::LeaveUser(User* leaveUser) {
     NotifyLeaveUser(leaveUser);
 }
 
-void HuntingGround::NotifyChat(int32_t clientIndex, const char* userID, const char* msg) {
+void HuntingGround::NotifyChat(int32_t clientIndex, const char* userID, const char* msg) const
+{
     GROUND_CHAT_NOTIFY_PACKET groundChatNtfyPkt;
     groundChatNtfyPkt.PacketId = PACKET_ID::GROUND_CHAT_NOTIFY;
     groundChatNtfyPkt.PacketLength = sizeof(groundChatNtfyPkt);
@@ -48,7 +49,7 @@ void HuntingGround::NotifyChat(int32_t clientIndex, const char* userID, const ch
     SendToAllUser(sizeof(groundChatNtfyPkt), reinterpret_cast<char*>(&groundChatNtfyPkt), clientIndex, false);
 }
 
-void HuntingGround::NotifyEnterUser(User* enterUser)
+void HuntingGround::NotifyEnterUser(User* enterUser) const
 {
     GROUND_USER_ENTER_NOTIFY_PACKET gUserNotifyPacket;
     gUserNotifyPacket.PacketId = PACKET_ID::GROUND_ENTER_NOTIFY;
@@ -58,7 +59,7 @@ void HuntingGround::NotifyEnterUser(User* enterUser)
     SendToAllUser(sizeof(gUserNotifyPacket), reinterpret_cast<char*>(&gUserNotifyPacket), enterUser->GetNetConnIdx(), true);
 }
 
-void HuntingGround::NotifyLeaveUser(User* leaveUser)
+void HuntingGround::NotifyLeaveUser(User* leaveUser) const
 {
     GROUND_USER_LEAVE_NOTIFY_PACKET gUserNotifyPacket;
     gUserNotifyPacket.PacketId = PACKET_ID::GROUND_LEAVE_NOTIFY;
@@ -70,7 +71,7 @@ void HuntingGround::NotifyLeaveUser(User* leaveUser)
 
 void HuntingGround::SendToAllUser(const uint16_t dataSize, char* data, const int32_t passUserIndex, bool exceptMe) const
 {
-    for (auto user : m_userList) {
+    for (const auto user : m_userList) {
         if (user == nullptr) {
             continue;
         }

@@ -114,14 +114,14 @@ PacketInfo User::GetPacket()
 	const int PACKET_TYPE_LENGTH = 2;
 	short packetSize = 0;
 
-	std::uint32_t remainByte = m_packetDataBufferWPos - m_packetDataBufferRPos;
+	const std::uint32_t remainByte = m_packetDataBufferWPos - m_packetDataBufferRPos;
 
 	if (remainByte < PACKET_HEADER_LENGTH)
 	{
 		return PacketInfo();
 	}
 
-	auto pHeader = reinterpret_cast<PACKET_HEADER*>(&m_packetDataBuffer[m_packetDataBufferRPos]);
+	const auto pHeader = reinterpret_cast<PACKET_HEADER*>(&m_packetDataBuffer[m_packetDataBufferRPos]);
 
 	if (pHeader->PacketLength > remainByte)
 	{

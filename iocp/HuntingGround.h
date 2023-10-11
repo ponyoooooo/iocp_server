@@ -20,9 +20,9 @@ public:
     uint16_t EnterUser(User* user);
     void LeaveUser(User* leaveUser);
 
-    void NotifyChat(int32_t clientIndex, const char* userID, const char* msg);
-    void NotifyEnterUser(User* user);
-    void NotifyLeaveUser(User* user);
+    void NotifyChat(int32_t clientIndex, const char* userID, const char* msg) const;
+    void NotifyEnterUser(User* user) const;
+    void NotifyLeaveUser(User* user) const;
 
     std::function<void(uint32_t, uint32_t, char*)> SendPacketFunc;
 

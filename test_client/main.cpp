@@ -26,6 +26,7 @@ enum class MENU : std::uint16_t
 	GAME = 3,
 	GROUND_SELECT = 4,
 	GROUND_ENTER = 5,
+	GROUND_MONSTER_LIST,
 	GROUND_USER_LIST,
 };
 

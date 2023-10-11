@@ -9,13 +9,13 @@ PacketManager::PacketManager() = default;
 
 void PacketManager::Init(const std::uint32_t maxClient)
 {
-    m_RecvFunctionDictionary[PACKET_ID::SYS_USER_CONNECT] = &PacketManager::ProcessUserConnect;
-    m_RecvFunctionDictionary[PACKET_ID::SYS_USER_DISCONNECT] = &PacketManager::ProcessUserDisconnect;
-    m_RecvFunctionDictionary[PACKET_ID::LOGIN_REQUEST] = &PacketManager::ProcessLogin;
+    m_recvFunctionDictionary[PACKET_ID::SYS_USER_CONNECT] = &PacketManager::ProcessUserConnect;
+    m_recvFunctionDictionary[PACKET_ID::SYS_USER_DISCONNECT] = &PacketManager::ProcessUserDisconnect;
+    m_recvFunctionDictionary[PACKET_ID::LOGIN_REQUEST] = &PacketManager::ProcessLogin;
 
-    m_RecvFunctionDictionary[PACKET_ID::GROUND_ENTER_REQUEST] = &PacketManager::ProcessEnterGround;
-    m_RecvFunctionDictionary[PACKET_ID::GROUND_LEAVE_REQUEST] = &PacketManager::ProcessLeaveGround;
-    m_RecvFunctionDictionary[PACKET_ID::GROUND_CHAT_REQUEST] = &PacketManager::ProcessGroundChatMessage;
+    m_recvFunctionDictionary[PACKET_ID::GROUND_ENTER_REQUEST] = &PacketManager::ProcessEnterGround;
+    m_recvFunctionDictionary[PACKET_ID::GROUND_LEAVE_REQUEST] = &PacketManager::ProcessLeaveGround;
+    m_recvFunctionDictionary[PACKET_ID::GROUND_CHAT_REQUEST] = &PacketManager::ProcessGroundChatMessage;
 
     CreateComponent(maxClient);
 }
@@ -49,49 +49,79 @@ void PacketManager::End()
     }
 }
 
-void PacketManager::ReceivePacketData(const std::uint32_t clientIndex, const std::uint32_t size, char* pData)
+void PacketManager::ReceivePacketData(const std::uint32_t clientIndex, const std::uint32_t size, const char* pData)
 {
-    auto pUser = m_userManager->GetUserByConnIdx(clientIndex);
+	const auto pUser = m_userManager->GetUserByConnIdx(clientIndex);
     pUser->SetPacketData(size, pData);
     EnqueuePacketData(clientIndex);
 }
 
 void PacketManager::ProcessPacket()
 {
+    m_processUserFuture = std::async(std::launch::async, &PacketManager::ProcessUserPacket, this);
+    m_processSystemFuture = std::async(std::launch::async, &PacketManager::ProcessSystemPacket, this);
+
+    m_processUserFuture.wait();
+    m_processSystemFuture.wait();
+}
+
+void PacketManager::ProcessUserPacket()
+{
+    const size_t batchSize = 10;
     while (m_isRunProcessThread)
     {
-        bool isIdle = true;
-
-        if (auto packetData = DequeuePacketData(); packetData.PacketId > PACKET_ID::SYS_END)
+        size_t count = 0;
         {
-            isIdle = false;
-            ProcessRecvPacket(packetData.ClientIndex, packetData.PacketId, packetData.DataSize, packetData.pDataPtr);
+            std::unique_lock<std::mutex> lock(m_processUserLock);
+            m_processUserCondition.wait(lock, [this] { return !m_incomingPacketUserIndex.empty(); });
+
+            while (!m_incomingPacketUserIndex.empty() && count < batchSize)
+            {
+                if (const auto packetData = DequeuePacketData(); packetData.PacketId > PACKET_ID::SYS_END)
+                {
+                    ProcessRecvPacket(packetData.ClientIndex, packetData.PacketId, packetData.DataSize, packetData.pDataPtr);
+                }
+                ++count;
+            }
         }
+    }
+}
 
-        if (auto packetData = DequeueSystemPacketData(); packetData.PacketId != PACKET_ID::NONE)
+void PacketManager::ProcessSystemPacket()
+{
+    const size_t batchSize = 10;
+    while (m_isRunProcessThread)
+    {
+        size_t count = 0;
         {
-            isIdle = false;
-            ProcessRecvPacket(packetData.ClientIndex, packetData.PacketId, packetData.DataSize, packetData.pDataPtr);
-        }
+            std::unique_lock<std::mutex> lock(m_processSystemLock);
+            m_processSystemCondition.wait(lock, [this] { return !m_systemPacketQueue.empty(); });
 
-        if (isIdle)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            while (!m_systemPacketQueue.empty() && count < batchSize)
+            {
+                if (const auto packetData = DequeueSystemPacketData(); packetData.PacketId != PACKET_ID::NONE)
+                {
+                    ProcessRecvPacket(packetData.ClientIndex, packetData.PacketId, packetData.DataSize, packetData.pDataPtr);
+                }
+                ++count;
+            }
         }
     }
 }
 
 void PacketManager::EnqueuePacketData(const std::uint32_t clientIndex)
 {
-    std::lock_guard<std::mutex> guard(m_lock);
-    m_incomingPacketUserIndex.push_back(clientIndex);
+    {
+        std::lock_guard<std::mutex> guard(m_processUserLock);
+        m_incomingPacketUserIndex.push_back(clientIndex);
+    }
+    m_processUserCondition.notify_one();
 }
 
 PacketInfo PacketManager::DequeuePacketData()
 {
     std::uint32_t userIndex = 0;
     {
-        std::lock_guard<std::mutex> guard(m_lock);
         if (m_incomingPacketUserIndex.empty())
         {
             return PacketInfo();
@@ -109,13 +139,15 @@ PacketInfo PacketManager::DequeuePacketData()
 
 void PacketManager::PushSystemPacket(const PacketInfo& packet)
 {
-    std::lock_guard<std::mutex> guard(m_lock);
-    m_systemPacketQueue.push_back(packet);
+    {
+        std::lock_guard<std::mutex> guard(m_processSystemLock);
+        m_systemPacketQueue.push_back(packet);
+    }
+    m_processSystemCondition.notify_one();
 }
 
 PacketInfo PacketManager::DequeueSystemPacketData()
 {
-    std::lock_guard<std::mutex> guard(m_lock);
     if (m_systemPacketQueue.empty())
     {
         return PacketInfo();
@@ -128,8 +160,8 @@ PacketInfo PacketManager::DequeueSystemPacketData()
 
 void PacketManager::ProcessRecvPacket(const std::uint32_t clientIndex, const PACKET_ID packetId, const std::uint16_t packetSize, char* pPacket)
 {
-    auto iter = m_RecvFunctionDictionary.find(packetId);
-    if (iter != m_RecvFunctionDictionary.end())
+    auto iter = m_recvFunctionDictionary.find(packetId);
+    if (iter != m_recvFunctionDictionary.end())
     {
         (this->*(iter->second))(clientIndex, packetSize, pPacket);
     }
@@ -138,7 +170,7 @@ void PacketManager::ProcessRecvPacket(const std::uint32_t clientIndex, const PAC
 void PacketManager::ProcessUserConnect(const std::uint32_t clientIndex, const std::uint16_t packetSize, char* pPacket)
 {
     printf("[ProcessUserConnect] clientIndex: %d\n", clientIndex);
-    auto pUser = m_userManager->GetUserByConnIdx(clientIndex);
+    const auto pUser = m_userManager->GetUserByConnIdx(clientIndex);
     pUser->Clear();
 }
 
@@ -155,7 +187,7 @@ void PacketManager::ProcessLogin(const std::uint32_t clientIndex, const std::uin
         return;
     }
 
-    auto pLoginReqPacket = reinterpret_cast<LOGIN_REQUEST_PACKET*>(pPacket);
+    const auto pLoginReqPacket = reinterpret_cast<LOGIN_REQUEST_PACKET*>(pPacket);
 
     auto pUserID = pLoginReqPacket->UserID;
     std::cout << std::format("requested user id = {}", pUserID) << '\n';
@@ -206,8 +238,8 @@ void PacketManager::ProcessEnterGround(const std::uint32_t clientIndex, std::uin
 {
     UNREFERENCED_PARAMETER(packetSize);
 
-    auto pGroundEnterReqPacket = reinterpret_cast<GROUND_ENTER_REQUEST_PACKET*>(pPacket);
-    auto pReqUser = m_userManager->GetUserByConnIdx(clientIndex);
+    const auto pGroundEnterReqPacket = reinterpret_cast<GROUND_ENTER_REQUEST_PACKET*>(pPacket);
+    const auto pReqUser = m_userManager->GetUserByConnIdx(clientIndex);
 
     if (!pReqUser)
     {
@@ -228,8 +260,8 @@ void PacketManager::ProcessLeaveGround(const std::uint32_t clientIndex, const st
     UNREFERENCED_PARAMETER(packetSize);
     UNREFERENCED_PARAMETER(pPacket);
 
-    auto reqUser = m_userManager->GetUserByConnIdx(clientIndex);
-    auto groundNum = reqUser->GetCurrentGround();
+    const auto reqUser = m_userManager->GetUserByConnIdx(clientIndex);
+    const auto groundNum = reqUser->GetCurrentGround();
 
     GROUND_LEAVE_RESPONSE_PACKET groundLeaveResPacket;
     groundLeaveResPacket.PacketId = PACKET_ID::GROUND_LEAVE_RESPONSE;
@@ -243,11 +275,11 @@ void PacketManager::ProcessGroundChatMessage(const std::uint32_t clientIndex, co
 {
     UNREFERENCED_PARAMETER(packetSize);
 
-    auto pGroundChatReqPacketet = reinterpret_cast<GROUND_CHAT_REQUEST_PACKET*>(pPacket);
-    auto reqUser = m_userManager->GetUserByConnIdx(clientIndex);
-    auto groundNum = reqUser->GetCurrentGround();
+    const auto pGroundChatReqPacketet = reinterpret_cast<GROUND_CHAT_REQUEST_PACKET*>(pPacket);
+    const auto reqUser = m_userManager->GetUserByConnIdx(clientIndex);
+    const auto groundNum = reqUser->GetCurrentGround();
 
-    auto pGround = m_groundManager->GetGroundByNumber(groundNum);
+    const auto pGround = m_groundManager->GetGroundByNumber(groundNum);
     if (!pGround)
     {
         GROUND_CHAT_RESPONSE_PACKET groundChatResPacket;
@@ -267,4 +299,3 @@ void PacketManager::ProcessGroundChatMessage(const std::uint32_t clientIndex, co
     SendPacketFunc(clientIndex, sizeof(groundChatResPacket), reinterpret_cast<char*>(&groundChatResPacket));
     pGround->NotifyChat(clientIndex, reqUser->GetUserId().c_str(), pGroundChatReqPacketet->Message);
 }
-

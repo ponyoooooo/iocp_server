@@ -31,11 +31,15 @@ private:
 	bool CreateWorkerThread();
 	void WorkerThread();
 	bool CreateAccepterThread();
-	ClientInfo* GetClientInfo(const std::uint32_t sessionIndex);
+	ClientInfo* GetClientInfo(const std::uint32_t sessionIndex) const;
 	void SetClientInfo(const ClientInfo* clientInfo);
+	void AddClientIdxToAcceptQueue(std::uint16_t clientIdx);
 	void AccepterThread();
 	void CloseSocket(ClientInfo* pClientInfo, bool bIsForce = false);
 
+	std::queue<std::uint16_t> m_acceptClientIdxQueue;
+	std::mutex m_acceptClientQueueMutex;
+	std::condition_variable m_condition;
 	std::uint32_t m_maxIOWorkerThreadCount;
 	std::vector<std::unique_ptr<ClientInfo>> m_clientInfos;
 	//std::queue<std::uint32_t> m_availableClientIndices;

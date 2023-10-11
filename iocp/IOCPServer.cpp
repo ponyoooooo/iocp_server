@@ -149,6 +149,7 @@ void IOCPServer::CreateClient(const std::uint32_t maxClientCount)
     {
         m_clientInfos.emplace_back(std::make_unique<ClientInfo>());
         m_clientInfos.back()->Initialize(i, m_iocpHandle); // m_idx 값을 설정
+        AddClientIdxToAcceptQueue(i);
         //m_availableClientIndices.push(i);
     }
 }
@@ -263,11 +264,10 @@ bool IOCPServer::CreateAccepterThread()
         std::cerr << "failed to create accepter thread: " << e.what() << '\n';
         return false;
     }
-
     return true;
 }
 
-ClientInfo* IOCPServer::GetClientInfo(const std::uint32_t sessionIndex)
+ClientInfo* IOCPServer::GetClientInfo(const std::uint32_t sessionIndex) const
 {
     return m_clientInfos[sessionIndex].get();
 }
@@ -278,32 +278,33 @@ void IOCPServer::SetClientInfo(const ClientInfo* clientInfo)
     //m_availableClientIndices.push(clientInfo->GetIdx());
 }
 
+void IOCPServer::AddClientIdxToAcceptQueue(std::uint16_t clientIdx)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_acceptClientQueueMutex);
+        m_acceptClientIdxQueue.push(clientIdx);
+    }
+    m_condition.notify_one();
+}
+
 void IOCPServer::AccepterThread()
 {
+    const size_t batchSize = 10;
     while (m_isAccepterRunning)
     {
-        auto curTimeSec = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-        for (auto& client : m_clientInfos)
+        size_t count = 0;
         {
-            if (client->IsConnected())
-            {
-                continue;
-            }
+            std::unique_lock<std::mutex> lock(m_acceptClientQueueMutex);
+            m_condition.wait(lock, [this] { return !m_acceptClientIdxQueue.empty(); });
 
-            if (static_cast<std::uint64_t>(curTimeSec) < client->GetLatestClosedTimeSec())
+            while (!m_acceptClientIdxQueue.empty() && count < batchSize)
             {
-                continue;
+	            const auto clientIdx = m_acceptClientIdxQueue.front();
+                m_acceptClientIdxQueue.pop();
+                GetClientInfo(clientIdx)->PostAccept(m_listenSocket);
+                ++count;
             }
-
-            if (const auto diff = curTimeSec - client->GetLatestClosedTimeSec(); diff <= RE_USE_SESSION_WAIT_TIMESEC)
-            {
-                continue;
-            }
-
-            client->PostAccept(m_listenSocket);
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(32));
     }
 }
 
@@ -311,5 +312,6 @@ void IOCPServer::CloseSocket(ClientInfo* pClientInfo, bool bIsForce)
 {
     const auto clientIdx = pClientInfo->GetIdx();
     pClientInfo->CloseSocket(bIsForce);
+    AddClientIdxToAcceptQueue(pClientInfo->GetIdx());
     OnClose(clientIdx);
 }
