@@ -18,6 +18,9 @@ void PacketManager::Init(const std::uint32_t maxClient)
     m_recvFunctionDictionary[PACKET_ID::GROUND_CHAT_REQUEST] = &PacketManager::ProcessGroundChatMessage;
 
     CreateComponent(maxClient);
+
+    m_processUserFuture = std::async(std::launch::async, &PacketManager::ProcessUserPacket, this);
+    m_processSystemFuture = std::async(std::launch::async, &PacketManager::ProcessSystemPacket, this);
 }
 
 void PacketManager::CreateComponent(const std::uint32_t maxClient)
@@ -36,7 +39,7 @@ void PacketManager::CreateComponent(const std::uint32_t maxClient)
 bool PacketManager::Run()
 {
     m_isRunProcessThread = true;
-    m_processThread = std::thread([this]() { ProcessPacket(); });
+    //m_processThread = std::thread([this]() { ProcessPacket(); });
     return true;
 }
 
@@ -56,14 +59,14 @@ void PacketManager::ReceivePacketData(const std::uint32_t clientIndex, const std
     EnqueuePacketData(clientIndex);
 }
 
-void PacketManager::ProcessPacket()
-{
-    m_processUserFuture = std::async(std::launch::async, &PacketManager::ProcessUserPacket, this);
-    m_processSystemFuture = std::async(std::launch::async, &PacketManager::ProcessSystemPacket, this);
-
-    m_processUserFuture.wait();
-    m_processSystemFuture.wait();
-}
+//void PacketManager::ProcessPacket()
+//{
+//    m_processUserFuture = std::async(std::launch::async, &PacketManager::ProcessUserPacket, this);
+//    m_processSystemFuture = std::async(std::launch::async, &PacketManager::ProcessSystemPacket, this);
+//
+//    m_processUserFuture.wait();
+//    m_processSystemFuture.wait();
+//}
 
 void PacketManager::ProcessUserPacket()
 {
