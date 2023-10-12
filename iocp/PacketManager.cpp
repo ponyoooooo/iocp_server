@@ -134,7 +134,7 @@ PacketInfo PacketManager::DequeuePacketData()
         m_incomingPacketUserIndex.pop_front();
     }
 
-    auto pUser = m_userManager->GetUserByConnIdx(userIndex);
+    const auto pUser = m_userManager->GetUserByConnIdx(userIndex);
     auto packetData = pUser->GetPacket();
     packetData.ClientIndex = userIndex;
     return packetData;
@@ -203,7 +203,7 @@ void PacketManager::ProcessLogin(const std::uint32_t clientIndex, const std::uin
     {
         //접속자수가 최대수를 차지해서 접속불가
         loginResPacket.Result = static_cast<std::int16_t>(ERROR_CODE::LOGIN_USER_USED_ALL_OBJ);
-        SendPacketFunc(clientIndex, sizeof(LOGIN_RESPONSE_PACKET), (char*)&loginResPacket);
+        SendPacketFunc(clientIndex, sizeof(LOGIN_RESPONSE_PACKET), reinterpret_cast<char*>(&loginResPacket));
         return;
     }
 
@@ -211,14 +211,14 @@ void PacketManager::ProcessLogin(const std::uint32_t clientIndex, const std::uin
     if (m_userManager->FindUserIndexByID(pUserID) == -1)
     {
         m_userManager->AddUser(pUserID, clientIndex);
-        loginResPacket.Result = (std::uint16_t)ERROR_CODE::NONE;
-        SendPacketFunc(clientIndex, sizeof(LOGIN_RESPONSE_PACKET), (char*)&loginResPacket);
+        loginResPacket.Result = static_cast<std::uint16_t>(ERROR_CODE::NONE);
+        SendPacketFunc(clientIndex, sizeof(LOGIN_RESPONSE_PACKET), reinterpret_cast<char*>(&loginResPacket));
     }
     else
     {
         //접속중인 유저여서 실패를 반환한다.
-        loginResPacket.Result = (std::uint16_t)ERROR_CODE::LOGIN_USER_ALREADY;
-        SendPacketFunc(clientIndex, sizeof(LOGIN_RESPONSE_PACKET), (char*)&loginResPacket);
+        loginResPacket.Result = static_cast<std::uint16_t>(ERROR_CODE::LOGIN_USER_ALREADY);
+        SendPacketFunc(clientIndex, sizeof(LOGIN_RESPONSE_PACKET), reinterpret_cast<char*>(&loginResPacket));
         return;
     }
 }

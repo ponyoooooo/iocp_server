@@ -12,9 +12,9 @@ public:
 	TextServer();
 	virtual ~TextServer();
 
-	virtual void OnConnect(const std::uint32_t clientIndex_) override;
-	virtual void OnClose(const std::uint32_t clientIndex_) override;
-	virtual void OnReceive(const std::uint32_t clientIndex_, const std::uint32_t size_, char* pData_) override;
+	virtual void OnConnect(const std::uint32_t clientIndex) override;
+	virtual void OnClose(const std::uint32_t clientIndex) override;
+	virtual void OnReceive(const std::uint32_t clientIndex, const std::uint32_t size, char* pData) override;
 
 	void Run(const std::uint32_t maxClient);
 	void End();
